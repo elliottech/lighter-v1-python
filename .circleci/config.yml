@@ -1,0 +1,26 @@
+version: 2
+jobs:
+  test:
+    docker:
+      - image: cimg/python:3.10
+    working_directory: ~/build
+    steps:
+      - checkout
+      - run:
+          name: pwd
+          command: ls
+      - run:
+          name: update pip
+          command: pip install --upgrade pip
+      - run:
+          name: install dependencies
+          command: pip install -r requirements.txt
+      - run:
+          name: test
+          command: tox
+
+workflows:
+  version: 2
+  build_and_test:
+    jobs:
+      - test
