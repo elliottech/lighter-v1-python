@@ -958,7 +958,7 @@ class Blockchain(object):
             )
 
         contract = self._get_token_contract(token)
-        return contract.functions.balanceOf(owner).call()
+        return contract.functions.balanceOf(Web3.toChecksumAddress(owner)).call()
 
     def get_token_allowance(
         self, spender: str, token: str, owner: Optional[str] = None
