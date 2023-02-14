@@ -15,9 +15,10 @@ from decimal import Decimal
 from web3.logs import DISCARD
 
 from lighter.constants import DEFAULT_GAS_AMOUNT
+from lighter.constants import MAX_GAS_LIMIT
+from lighter.constants import DEFAULT_MAX_PRIORITY_FEE_PER_GAS
 from lighter.constants import DEFAULT_GAS_MULTIPLIER
-from lighter.constants import DEFAULT_GAS_PRICE
-from lighter.constants import DEFAULT_GAS_PRICE_ADDITION
+from lighter.constants import DEFAULT_MAX_FEE_PER_GAS
 from lighter.constants import MAX_SOLIDITY_UINT
 from lighter.errors import TransactionReverted
 from collections.abc import Iterable
@@ -430,6 +431,7 @@ class Blockchain(object):
         options = dict(self.send_options, **(options or {}))
 
         options["chainId"] = self.id
+        options["type"] = "0x2"
 
         if "from" not in options:
             options["from"] = self.account.address
@@ -440,18 +442,18 @@ class Blockchain(object):
         auto_detect_nonce = "nonce" not in options
         if auto_detect_nonce:
             options["nonce"] = self._get_next_nonce(options["from"])
-        if "gasPrice" not in options:
-            try:
-                g = self._get_gas_price()
-                options["gasPrice"] = g + DEFAULT_GAS_PRICE_ADDITION
-            except Exception:
-                options["gasPrice"] = DEFAULT_GAS_PRICE
         if "value" not in options:
             options["value"] = 0
         gas_multiplier = options.pop("gasMultiplier", DEFAULT_GAS_MULTIPLIER)
+        options["maxFeePerGas"] = DEFAULT_MAX_FEE_PER_GAS
+        options["maxPriorityFeePerGas"] = DEFAULT_MAX_PRIORITY_FEE_PER_GAS
         if "gas" not in options and method:
             try:
                 options["gas"] = int(method.estimateGas(options) * gas_multiplier)
+                if options["gas"] > MAX_GAS_LIMIT:
+                    raise ValueError(
+                        "Gas limit exceeded, try with less number of operations in a batch transaction."
+                    )
             except Exception:
                 options["gas"] = DEFAULT_GAS_AMOUNT
 
@@ -466,6 +468,17 @@ class Blockchain(object):
             ):
                 try:
                     options["nonce"] += 1
+                    signed = self._sign_tx(method, options)
+                    tx_hash = self.web3.eth.sendRawTransaction(
+                        signed.rawTransaction,
+                    )
+                except ValueError as inner_error:
+                    error = inner_error
+                else:
+                    break  # Break on success...
+            while "max fee per gas less than block base fee" in str(error):
+                try:
+                    options["maxFeePerGas"] += options["maxFeePerGas"]
                     signed = self._sign_tx(method, options)
                     tx_hash = self.web3.eth.sendRawTransaction(
                         signed.rawTransaction,
@@ -763,6 +776,11 @@ class Blockchain(object):
         human_readable_prices: List[str],
         sides: List[OrderSide],
     ) -> HexBytes:
+        if not all(isinstance(x, str) for x in human_readable_sizes):
+            raise ValueError("Invalid size, size should be string")
+        if not all(isinstance(x, str) for x in human_readable_prices):
+            raise ValueError("Invalid price, price should be string")
+
         self._tick_check(human_readable_sizes, human_readable_prices, orderbook_symbol)
         orderbook = self._get_orderbook(orderbook_symbol)
 
@@ -809,6 +827,11 @@ class Blockchain(object):
         human_readable_prices: List[str],
         old_sides: List[OrderSide],
     ) -> HexBytes:
+        if not all(isinstance(x, str) for x in human_readable_sizes):
+            raise ValueError("Invalid size, size should be string")
+        if not all(isinstance(x, str) for x in human_readable_prices):
+            raise ValueError("Invalid price, price should be string")
+
         self._tick_check(human_readable_sizes, human_readable_prices, orderbook_symbol)
 
         orderbook = self._get_orderbook(orderbook_symbol)
