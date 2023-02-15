@@ -16,7 +16,7 @@ REQUIREMENTS = [
 
 setup(
     name="lighter-v1-python",
-    version="1.0.0",
+    version="1.0.1",
     packages=find_packages(),
     package_data={
         "lighter": [
@@ -38,7 +38,6 @@ setup(
         "Operating System :: OS Independent",
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
-        "Programming Language :: Python :: 3.11",
         "Programming Language :: Python",
         "Topic :: Software Development :: Libraries :: Python Modules",
     ],
