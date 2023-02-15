@@ -104,6 +104,7 @@ ProcessedTransactionReceipt = TypedDict(
         "limit_order_canceled_event": List[OrderCanceledEvent],
         "market_order_created_events": List[OrderCreatedEvent],
         "trade_events": List[TradeEvent],
+        "fee": str,
     },
 )
 
@@ -134,6 +135,19 @@ LimitOrderCanceled = TypedDict(
         "status": OrderStatus,
         "type": OrderType,
         "side": OrderSide,
+    },
+)
+
+ContractResult = TypedDict(
+    "ContractResult",
+    {
+        "events": Union[
+            List[OrderCreated],
+            List[LimitOrderCanceled],
+            List[Union[OrderCreated, LimitOrderCanceled]],
+        ],
+        "tx_hash": str,
+        "fee": str,
     },
 )
 
@@ -502,6 +516,11 @@ class Blockchain(object):
         orderbook = self._get_orderbook(orderbook_symbol)
 
         receipt = self._wait_for_tx(tx_hash)
+        fee = str(
+            Decimal(str(receipt["gasUsed"]))
+            * Decimal(str(receipt["effectiveGasPrice"]))
+            / 10**18
+        )
 
         limit_order_created_events: Iterable[
             EventData
@@ -544,6 +563,7 @@ class Blockchain(object):
             "market_order_created_events": processed_market_order_created_events,
             "limit_order_canceled_event": processed_limit_order_cancelled_events,
             "trade_events": processed_trade_events,
+            "fee": fee,
         }
 
     def _process_order_created_events(
@@ -627,7 +647,7 @@ class Blockchain(object):
         tx_hash: HexBytes,
         orderbook_symbol: str,
         processed_events: Optional[ProcessedTransactionReceipt] = None,
-    ) -> List[OrderCreated]:
+    ) -> ContractResult:
         processed_events = (
             processed_events
             if processed_events
@@ -674,14 +694,18 @@ class Blockchain(object):
                 }
             )
 
-        return result
+        return {
+            "events": result,
+            "tx_hash": tx_hash.hex(),
+            "fee": processed_events["fee"],
+        }
 
     def get_limit_order_canceled_transaction_result(
         self,
         tx_hash: HexBytes,
         orderbook_symbol: str,
         processed_events: Optional[ProcessedTransactionReceipt] = None,
-    ) -> List[LimitOrderCanceled]:
+    ) -> ContractResult:
         processed_events = (
             processed_events
             if processed_events
@@ -705,24 +729,32 @@ class Blockchain(object):
                 }
             )
 
-        return result
+        return {
+            "events": result,
+            "tx_hash": tx_hash.hex(),
+            "fee": processed_events["fee"],
+        }
 
     def get_update_limit_order_transaction_result(
         self, tx_hash: HexBytes, orderbook_symbol: str
-    ) -> List[Union[OrderCreated, LimitOrderCanceled]]:
+    ) -> ContractResult:
         result: List[Union[OrderCreated, LimitOrderCanceled]] = []
         events = self._process_transaction_events(tx_hash, orderbook_symbol)
 
         created_results = self.get_create_order_transaction_result(
             tx_hash, orderbook_symbol, events
         )
-        result.extend(created_results)
+        result.extend(created_results["events"])
         cancelled_results = self.get_limit_order_canceled_transaction_result(
             tx_hash, orderbook_symbol, events
         )
-        result.extend(cancelled_results)
+        result.extend(cancelled_results["events"])
 
-        return result
+        return {
+            "events": result,
+            "tx_hash": tx_hash.hex(),
+            "fee": cancelled_results["fee"],
+        }
 
     # -----------------------------------------------------------
     # Transactions
