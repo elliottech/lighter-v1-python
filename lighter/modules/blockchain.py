@@ -781,8 +781,14 @@ class Blockchain(object):
                 != 0
             ):
                 raise ValueError(
-                    "Invalid size {}, size should be multiple of size thick {}".format(
-                        size, orderbook["pow_size_tick"]
+                    "Invalid size {}, size should be multiple of size tick {}".format(
+                        size,
+                        str(
+                            Decimal(orderbook["pow_size_tick"])
+                            / Decimal(
+                                self._get_token_pow_decimal(orderbook["token0_symbol"])
+                            )
+                        ),
                     )
                 )
 
@@ -796,8 +802,14 @@ class Blockchain(object):
                 != 0
             ):
                 raise ValueError(
-                    "Invalid price {}, price should be multiple of price thick {}".format(
-                        price, orderbook["pow_price_tick"]
+                    "Invalid price {}, price should be multiple of price tick {}".format(
+                        price,
+                        str(
+                            Decimal(orderbook["pow_price_tick"])
+                            / Decimal(
+                                self._get_token_pow_decimal(orderbook["token1_symbol"])
+                            )
+                        ),
                     )
                 )
 
