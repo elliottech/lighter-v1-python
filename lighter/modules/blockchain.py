@@ -474,44 +474,40 @@ class Blockchain(object):
         signed = self._sign_tx(method, options)
         try:
             tx_hash = self.web3.eth.send_raw_transaction(signed.rawTransaction)
-
         except ValueError as error:
             retry_count = 0
-            while (
-                retry_count < 2
-                and auto_detect_nonce
-                and (
+            while retry_count < 2:
+                if auto_detect_nonce and (
                     "nonce too low" in str(error)
                     or "replacement transaction underpriced" in str(error)
-                )
-            ):
-                try:
-                    options["nonce"] += 1
-                    signed = self._sign_tx(method, options)
-                    tx_hash = self.web3.eth.sendRawTransaction(
-                        signed.rawTransaction,
-                    )
-                    retry_count += 1
-                except ValueError as inner_error:
-                    error = inner_error
+                ):
+                    try:
+                        retry_count += 1
+                        options["nonce"] += 1
+                        signed = self._sign_tx(method, options)
+                        tx_hash = self.web3.eth.sendRawTransaction(
+                            signed.rawTransaction,
+                        )
+                    except ValueError as inner_error:
+                        error = inner_error
+                    else:
+                        break
+                elif "max fee per gas less than block base fee" in str(error):
+                    try:
+                        retry_count += 1
+                        options["maxFeePerGas"] += options["maxFeePerGas"]
+                        signed = self._sign_tx(method, options)
+                        tx_hash = self.web3.eth.sendRawTransaction(
+                            signed.rawTransaction,
+                        )
+                    except ValueError as inner_error:
+                        error = inner_error
+                    else:
+                        break
                 else:
-                    break  # Break on success...
-            while retry_count < 2 and "max fee per gas less than block base fee" in str(
-                error
-            ):
-                try:
-                    options["maxFeePerGas"] += options["maxFeePerGas"]
-                    signed = self._sign_tx(method, options)
-                    tx_hash = self.web3.eth.sendRawTransaction(
-                        signed.rawTransaction,
-                    )
-                    retry_count += 1
-                except ValueError as inner_error:
-                    error = inner_error
-                else:
-                    break  # Break on success...
+                    raise error
             else:
-                raise error  # ...and raise error otherwise.
+                raise error
 
         # Update next nonce for the account.
         self._next_nonce_for_address[options["from"]] = options["nonce"] + 1
