@@ -15,9 +15,10 @@ from decimal import Decimal
 from web3.logs import DISCARD
 
 from lighter.constants import DEFAULT_GAS_AMOUNT
+from lighter.constants import MAX_GAS_LIMIT
+from lighter.constants import DEFAULT_MAX_PRIORITY_FEE_PER_GAS
 from lighter.constants import DEFAULT_GAS_MULTIPLIER
-from lighter.constants import DEFAULT_GAS_PRICE
-from lighter.constants import DEFAULT_GAS_PRICE_ADDITION
+from lighter.constants import DEFAULT_MAX_FEE_PER_GAS
 from lighter.constants import MAX_SOLIDITY_UINT
 from lighter.errors import TransactionReverted
 from collections.abc import Iterable
@@ -103,6 +104,7 @@ ProcessedTransactionReceipt = TypedDict(
         "limit_order_canceled_event": List[OrderCanceledEvent],
         "market_order_created_events": List[OrderCreatedEvent],
         "trade_events": List[TradeEvent],
+        "fee": str,
     },
 )
 
@@ -133,6 +135,19 @@ LimitOrderCanceled = TypedDict(
         "status": OrderStatus,
         "type": OrderType,
         "side": OrderSide,
+    },
+)
+
+ContractResult = TypedDict(
+    "ContractResult",
+    {
+        "events": Union[
+            List[OrderCreated],
+            List[LimitOrderCanceled],
+            List[Union[OrderCreated, LimitOrderCanceled]],
+        ],
+        "tx_hash": str,
+        "fee": str,
     },
 )
 
@@ -430,6 +445,7 @@ class Blockchain(object):
         options = dict(self.send_options, **(options or {}))
 
         options["chainId"] = self.id
+        options["type"] = "0x2"
 
         if "from" not in options:
             options["from"] = self.account.address
@@ -440,42 +456,58 @@ class Blockchain(object):
         auto_detect_nonce = "nonce" not in options
         if auto_detect_nonce:
             options["nonce"] = self._get_next_nonce(options["from"])
-        if "gasPrice" not in options:
-            try:
-                g = self._get_gas_price()
-                options["gasPrice"] = g + DEFAULT_GAS_PRICE_ADDITION
-            except Exception:
-                options["gasPrice"] = DEFAULT_GAS_PRICE
         if "value" not in options:
             options["value"] = 0
         gas_multiplier = options.pop("gasMultiplier", DEFAULT_GAS_MULTIPLIER)
+        options["maxFeePerGas"] = DEFAULT_MAX_FEE_PER_GAS
+        options["maxPriorityFeePerGas"] = DEFAULT_MAX_PRIORITY_FEE_PER_GAS
         if "gas" not in options and method:
             try:
                 options["gas"] = int(method.estimateGas(options) * gas_multiplier)
+                if options["gas"] > MAX_GAS_LIMIT:
+                    raise ValueError(
+                        "Gas limit exceeded, try with less number of operations in a batch transaction."
+                    )
             except Exception:
                 options["gas"] = DEFAULT_GAS_AMOUNT
 
         signed = self._sign_tx(method, options)
         try:
             tx_hash = self.web3.eth.send_raw_transaction(signed.rawTransaction)
-
         except ValueError as error:
-            while auto_detect_nonce and (
-                "nonce too low" in str(error)
-                or "replacement transaction underpriced" in str(error)
-            ):
-                try:
-                    options["nonce"] += 1
-                    signed = self._sign_tx(method, options)
-                    tx_hash = self.web3.eth.sendRawTransaction(
-                        signed.rawTransaction,
-                    )
-                except ValueError as inner_error:
-                    error = inner_error
+            retry_count = 0
+            while retry_count < 2:
+                if auto_detect_nonce and (
+                    "nonce too low" in str(error)
+                    or "replacement transaction underpriced" in str(error)
+                ):
+                    try:
+                        retry_count += 1
+                        options["nonce"] += 1
+                        signed = self._sign_tx(method, options)
+                        tx_hash = self.web3.eth.sendRawTransaction(
+                            signed.rawTransaction,
+                        )
+                    except ValueError as inner_error:
+                        error = inner_error
+                    else:
+                        break
+                elif "max fee per gas less than block base fee" in str(error):
+                    try:
+                        retry_count += 1
+                        options["maxFeePerGas"] += options["maxFeePerGas"]
+                        signed = self._sign_tx(method, options)
+                        tx_hash = self.web3.eth.sendRawTransaction(
+                            signed.rawTransaction,
+                        )
+                    except ValueError as inner_error:
+                        error = inner_error
+                    else:
+                        break
                 else:
-                    break  # Break on success...
+                    raise error
             else:
-                raise error  # ...and raise error otherwise.
+                raise error
 
         # Update next nonce for the account.
         self._next_nonce_for_address[options["from"]] = options["nonce"] + 1
@@ -489,6 +521,11 @@ class Blockchain(object):
         orderbook = self._get_orderbook(orderbook_symbol)
 
         receipt = self._wait_for_tx(tx_hash)
+        fee = str(
+            Decimal(str(receipt["gasUsed"]))
+            * Decimal(str(receipt["effectiveGasPrice"]))
+            / 10**18
+        )
 
         limit_order_created_events: Iterable[
             EventData
@@ -531,6 +568,7 @@ class Blockchain(object):
             "market_order_created_events": processed_market_order_created_events,
             "limit_order_canceled_event": processed_limit_order_cancelled_events,
             "trade_events": processed_trade_events,
+            "fee": fee,
         }
 
     def _process_order_created_events(
@@ -614,7 +652,7 @@ class Blockchain(object):
         tx_hash: HexBytes,
         orderbook_symbol: str,
         processed_events: Optional[ProcessedTransactionReceipt] = None,
-    ) -> List[OrderCreated]:
+    ) -> ContractResult:
         processed_events = (
             processed_events
             if processed_events
@@ -661,14 +699,18 @@ class Blockchain(object):
                 }
             )
 
-        return result
+        return {
+            "events": result,
+            "tx_hash": tx_hash.hex(),
+            "fee": processed_events["fee"],
+        }
 
     def get_limit_order_canceled_transaction_result(
         self,
         tx_hash: HexBytes,
         orderbook_symbol: str,
         processed_events: Optional[ProcessedTransactionReceipt] = None,
-    ) -> List[LimitOrderCanceled]:
+    ) -> ContractResult:
         processed_events = (
             processed_events
             if processed_events
@@ -692,24 +734,32 @@ class Blockchain(object):
                 }
             )
 
-        return result
+        return {
+            "events": result,
+            "tx_hash": tx_hash.hex(),
+            "fee": processed_events["fee"],
+        }
 
     def get_update_limit_order_transaction_result(
         self, tx_hash: HexBytes, orderbook_symbol: str
-    ) -> List[Union[OrderCreated, LimitOrderCanceled]]:
+    ) -> ContractResult:
         result: List[Union[OrderCreated, LimitOrderCanceled]] = []
         events = self._process_transaction_events(tx_hash, orderbook_symbol)
 
         created_results = self.get_create_order_transaction_result(
             tx_hash, orderbook_symbol, events
         )
-        result.extend(created_results)
+        result.extend(created_results["events"])
         cancelled_results = self.get_limit_order_canceled_transaction_result(
             tx_hash, orderbook_symbol, events
         )
-        result.extend(cancelled_results)
+        result.extend(cancelled_results["events"])
 
-        return result
+        return {
+            "events": result,
+            "tx_hash": tx_hash.hex(),
+            "fee": cancelled_results["fee"],
+        }
 
     # -----------------------------------------------------------
     # Transactions
@@ -736,8 +786,14 @@ class Blockchain(object):
                 != 0
             ):
                 raise ValueError(
-                    "Invalid size {}, size should be multiple of size thick {}".format(
-                        size, orderbook["pow_size_tick"]
+                    "Invalid size {}, size should be multiple of size tick {}".format(
+                        size,
+                        str(
+                            Decimal(orderbook["pow_size_tick"])
+                            / Decimal(
+                                self._get_token_pow_decimal(orderbook["token0_symbol"])
+                            )
+                        ),
                     )
                 )
 
@@ -751,8 +807,14 @@ class Blockchain(object):
                 != 0
             ):
                 raise ValueError(
-                    "Invalid price {}, price should be multiple of price thick {}".format(
-                        price, orderbook["pow_price_tick"]
+                    "Invalid price {}, price should be multiple of price tick {}".format(
+                        price,
+                        str(
+                            Decimal(orderbook["pow_price_tick"])
+                            / Decimal(
+                                self._get_token_pow_decimal(orderbook["token1_symbol"])
+                            )
+                        ),
                     )
                 )
 
@@ -763,6 +825,11 @@ class Blockchain(object):
         human_readable_prices: List[str],
         sides: List[OrderSide],
     ) -> HexBytes:
+        if not all(isinstance(x, str) for x in human_readable_sizes):
+            raise ValueError("Invalid size, size should be string")
+        if not all(isinstance(x, str) for x in human_readable_prices):
+            raise ValueError("Invalid price, price should be string")
+
         self._tick_check(human_readable_sizes, human_readable_prices, orderbook_symbol)
         orderbook = self._get_orderbook(orderbook_symbol)
 
@@ -809,6 +876,11 @@ class Blockchain(object):
         human_readable_prices: List[str],
         old_sides: List[OrderSide],
     ) -> HexBytes:
+        if not all(isinstance(x, str) for x in human_readable_sizes):
+            raise ValueError("Invalid size, size should be string")
+        if not all(isinstance(x, str) for x in human_readable_prices):
+            raise ValueError("Invalid price, price should be string")
+
         self._tick_check(human_readable_sizes, human_readable_prices, orderbook_symbol)
 
         orderbook = self._get_orderbook(orderbook_symbol)

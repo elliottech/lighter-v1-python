@@ -1,6 +1,6 @@
 # Lighter
 
-Python client for Lighter (v1).
+Python client for Lighter (v1). The sdk is tested against Python versions 3.9 and 3.10.
 
 ## Installation
 
@@ -48,6 +48,12 @@ Following parameters are required to use `Blockchain` module:
 - `private_key`: You need to provide your wallet private key to sign your transactions.
 - `web3_provider_url`: You need a node to interact with the contract. We suggest alchemy which provides 300M free compute units monthly, You can register and get your keys [here](https://www.alchemy.com/)
 
+Blockchain module enables you to do multiple operations in one transaction. The number of operations is limited to 4 millions gas. So the limits are rougly;
+
+- 25 order creations in one transaction
+- 100 order cancellations in one transaction
+- 25 order updates in one transaction
+
 ```python
 from lighter.lighter_client import Client
 import os
@@ -78,7 +84,6 @@ client.blockchain.set_token_max_allowance(
 
 
 # Let's create a batch of limit orders
-
 sizes = ["0.001", "0.001", "0.001"]
 prices = ["1050", "1200", "1000"]
 sides = [OrderSide.BUY, OrderSide.SELL, OrderSide.BUY]
