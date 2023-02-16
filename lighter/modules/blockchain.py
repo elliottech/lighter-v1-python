@@ -476,9 +476,14 @@ class Blockchain(object):
             tx_hash = self.web3.eth.send_raw_transaction(signed.rawTransaction)
 
         except ValueError as error:
-            while auto_detect_nonce and (
-                "nonce too low" in str(error)
-                or "replacement transaction underpriced" in str(error)
+            retry_count = 0
+            while (
+                retry_count < 2
+                and auto_detect_nonce
+                and (
+                    "nonce too low" in str(error)
+                    or "replacement transaction underpriced" in str(error)
+                )
             ):
                 try:
                     options["nonce"] += 1
@@ -486,17 +491,21 @@ class Blockchain(object):
                     tx_hash = self.web3.eth.sendRawTransaction(
                         signed.rawTransaction,
                     )
+                    retry_count += 1
                 except ValueError as inner_error:
                     error = inner_error
                 else:
                     break  # Break on success...
-            while "max fee per gas less than block base fee" in str(error):
+            while retry_count < 2 and "max fee per gas less than block base fee" in str(
+                error
+            ):
                 try:
                     options["maxFeePerGas"] += options["maxFeePerGas"]
                     signed = self._sign_tx(method, options)
                     tx_hash = self.web3.eth.sendRawTransaction(
                         signed.rawTransaction,
                     )
+                    retry_count += 1
                 except ValueError as inner_error:
                     error = inner_error
                 else:
