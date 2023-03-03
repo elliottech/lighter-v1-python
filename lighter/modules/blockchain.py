@@ -476,14 +476,16 @@ class Blockchain(object):
             tx_hash = self.web3.eth.send_raw_transaction(signed.rawTransaction)
         except ValueError as error:
             retry_count = 0
-            while retry_count < 2:
+            while retry_count < 3:
                 if auto_detect_nonce and (
                     "nonce too low" in str(error)
                     or "replacement transaction underpriced" in str(error)
                 ):
                     try:
                         retry_count += 1
-                        options["nonce"] += 1
+                        options["nonce"] = self.web3.eth.getTransactionCount(
+                            options["from"]
+                        )
                         signed = self._sign_tx(method, options)
                         tx_hash = self.web3.eth.sendRawTransaction(
                             signed.rawTransaction,
