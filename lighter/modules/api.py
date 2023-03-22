@@ -7,7 +7,6 @@ from lighter.constants import DEFAULT_API_TIMEOUT
 from lighter.constants import HOST
 from lighter.errors import LighterApiError
 from lighter.helpers.request_helpers import generate_query_path
-from lighter.helpers.requests import request, Response
 
 
 class BaseApi(object):

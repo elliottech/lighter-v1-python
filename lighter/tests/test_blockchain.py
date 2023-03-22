@@ -1,6 +1,4 @@
 import pytest
-from web3 import Web3
-from lighter.helpers.requests import Response
 
 from lighter.lighter_client import Client
 from lighter.modules.blockchain import OrderSide
@@ -25,22 +23,20 @@ def mocked_client(mocker) -> Client:
     mocker.patch("web3.main.Web3")
     mocker.patch(
         "lighter.modules.api.Api.get_orderbook_meta",
-        return_value=Response(data={"orderbookmetas": []}),
+        return_value={"orderbookmetas": []},
     )
 
     mocker.patch(
         "lighter.modules.api.Api.get_blockchains",
-        return_value=Response(
-            data={
-                "blockchains": [
-                    {
-                        "chain_id": "420",
-                        "router_address": "xxx",
-                        "factory_address": "xxx",
-                    }
-                ]
-            }
-        ),
+        return_value={
+            "blockchains": [
+                {
+                    "chain_id": "420",
+                    "router_address": "xxx",
+                    "factory_address": "xxx",
+                }
+            ]
+        },
     )
 
     mocker.patch(

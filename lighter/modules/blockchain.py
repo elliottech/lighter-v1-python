@@ -14,6 +14,8 @@ from eth_account.signers.local import LocalAccount
 from eth_account.datastructures import SignedTransaction
 from decimal import Decimal
 from web3.logs import DISCARD
+import asyncio
+import nest_asyncio
 
 from lighter.constants import DEFAULT_GAS_AMOUNT
 from lighter.constants import MAX_GAS_LIMIT
@@ -433,8 +435,6 @@ class AsyncBlockchain(BaseBlockchain):
         factory_address: str,
         send_options: Any,
     ):
-        self.web3 = web3
-        self._api = api
         super().__init__(
             blockchain_id=blockchain_id,
             orderbooks=orderbooks,
@@ -444,31 +444,13 @@ class AsyncBlockchain(BaseBlockchain):
             send_options=send_options,
         )
 
-    @classmethod
-    async def create(
-        cls,
-        web3: AsyncWeb3,
-        blockchain_id: int,
-        orderbooks: List[Orderbook],  # client gives this, by getting it from api
-        private_key: str,
-        api: AsyncApi,
-        router_address: str,
-        factory_address: str,
-        send_options: Any,
-    ):
-        self = cls(
-            web3=web3,
-            blockchain_id=blockchain_id,
-            orderbooks=orderbooks,
-            private_key=private_key,
-            api=api,
-            router_address=router_address,
-            factory_address=factory_address,
-            send_options=send_options,
-        )
+        self.web3 = web3
+        self._api = api
 
-        self._tokens = await self.prepare_tokens()
-        return self
+        loop = asyncio.get_event_loop()
+        nest_asyncio.apply()
+
+        self._tokens = loop.run_until_complete(self.prepare_tokens())
 
     async def prepare_tokens(self) -> Dict[str, Token]:
         result: Dict[str, Token] = {}

@@ -54,47 +54,6 @@ class Client(object):
         self._blockchain = None
         self._async_blockchain = None
 
-    async def set_async_blockchain(self):
-        if not self._async_blockchain:
-            if self.async_web3 and self.private_key:
-
-                orderbooks: List[Orderbook] = self.api.get_orderbook_meta()[
-                    "orderbookmetas"
-                ]
-
-                chains = self.api.get_blockchains()["blockchains"]
-
-                chain = next(
-                    (
-                        item
-                        for item in chains
-                        if item["chain_id"] == str(self.blockchain_id)
-                    ),
-                    None,
-                )
-
-                if not chain:
-                    raise Exception(
-                        "Chain with chain_id {} not found".format(self.blockchain_id)
-                    )
-
-                self._async_blockchain = await AsyncBlockchain.create(
-                    web3=self.async_web3,
-                    blockchain_id=self.blockchain_id,
-                    orderbooks=orderbooks,
-                    private_key=self.private_key,
-                    api=self._async_api,
-                    router_address=chain["router_address"],
-                    factory_address=chain["factory_address"],
-                    send_options=self.send_options,
-                )
-            else:
-                raise Exception(
-                    "Blockchain module is not supported since neither web3 "
-                    + "nor web3_provider was provided OR since"
-                    + "private_key was not provided",
-                )
-
     @property
     def api(self):
         """
@@ -158,7 +117,7 @@ class Client(object):
         return self._blockchain
 
     @property
-    async def async_blockchain(self) -> AsyncBlockchain:
+    def async_blockchain(self) -> AsyncBlockchain:
         """
         Get the blockchain module, used for interracting with contracts.
         """
@@ -186,7 +145,7 @@ class Client(object):
                         "Chain with chain_id {} not found".format(self.blockchain_id)
                     )
 
-                self._async_blockchain = await AsyncBlockchain.create(
+                self._async_blockchain = AsyncBlockchain(
                     web3=self.async_web3,
                     blockchain_id=self.blockchain_id,
                     orderbooks=orderbooks,
