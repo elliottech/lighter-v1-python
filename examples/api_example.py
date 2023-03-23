@@ -12,7 +12,7 @@ client = Client(
 )
 
 # Let's get available blockchains and their details from the api module.
-blockchains = client.api.get_blockchains().data
+blockchains = client.api.get_blockchains()
 
 # example output:
 # {
@@ -35,7 +35,7 @@ blockchains = client.api.get_blockchains().data
 # }
 
 # Let's get available order books on the blockchain that provided web3 url and their details from the api module.
-orderbook_meta_data = client.api.get_orderbook_meta().data
+orderbook_meta_data = client.api.get_orderbook_meta()
 
 # example output:
 # {
@@ -78,7 +78,7 @@ orderbook_meta_data = client.api.get_orderbook_meta().data
 # }
 
 # Let's get orders on WETH_USDC order book.
-client.api.get_orderbook(orderbook_symbol=ORDERBOOK_WETH_USDC).data
+client.api.get_orderbook(orderbook_symbol=ORDERBOOK_WETH_USDC)
 
 # example output:
 # {
@@ -110,7 +110,7 @@ orders = client.api.get_orders(
     owner="YOUR_WALLET_ADDRESS",
     status=ORDER_STATUS_OPEN,
     type=ORDER_TYPE_LIMIT,
-).data
+)
 
 # example output:
 # {
@@ -138,8 +138,7 @@ orders = client.api.get_orders(
 # Let's get your trades from the WETH_USDC order book.
 my_trades = client.api.get_trades(
     orderbook_symbol=ORDERBOOK_WETH_USDC, owner="YOUR_WALLET_ADDRESS"
-).data
-
+)
 # example output:
 # {
 #     "trades": [
@@ -168,7 +167,7 @@ candles = client.api.get_candles(
     resolution=5,
     timestamp_start=1609276939,
     timestamp_end=1609276940,
-).data
+)
 
 # example output:
 # {

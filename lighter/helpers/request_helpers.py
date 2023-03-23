@@ -19,37 +19,3 @@ def generate_query_path(url, params):
         return url + "?" + paramsString
 
     return url
-
-
-def json_stringify(data: dict):
-    return json.dumps(data, separators=(",", ":"))
-
-
-def random_client_id():
-    return str(int(float(str(random.random())[2:])))
-
-
-def generate_now_iso():
-    return (
-        datetime.utcnow().strftime(
-            "%Y-%m-%dT%H:%M:%S.%f",
-        )[:-3]
-        + "Z"
-    )
-
-
-def iso_to_epoch_seconds(iso):
-    return dp.parse(iso).timestamp()
-
-
-def epoch_seconds_to_iso(epoch):
-    return (
-        datetime.utcfromtimestamp(epoch).strftime(
-            "%Y-%m-%dT%H:%M:%S.%f",
-        )[:-3]
-        + "Z"
-    )
-
-
-def remove_nones(original):
-    return {k: v for k, v in original.items() if v is not None}
