@@ -1,6 +1,6 @@
 # Lighter
 
-Python client for Lighter (v1). The sdk is tested against Python versions 3.9 and 3.10.
+Python client for Lighter (v1). The sdk is tested against Python versions 3.9, 3.10 and 3.11.
 
 ## Installation
 
@@ -10,10 +10,12 @@ pip install lighter-v1-python
 
 ## Getting Started
 
-The `Client` object has two main modules;
+The `Client` object has four main modules;
 
 - `Api`: allows interaction with the lighter api
+- `AsyncApi`: allows for async interaction with the lighter api
 - `Blockchain`: allows interaction with ligter contracts
+- `AsyncBlockchain`: allows async interaction with ligter contracts
 
 `Client` can be created with private key or not depending on whether you are going to use the api or interract with the contracts. For more complete examples, see the [examples](./examples/) directory.
 
@@ -95,4 +97,76 @@ tx_hash = client.blockchain.create_limit_order_batch("WETH_USDC", sizes, prices,
 # you can use the following method.
 # alternatively you can wait the data from websocket
 result = client.blockchain.get_create_order_transaction_result(tx_hash, "WETH_USDC")
+```
+
+### Async Examples
+
+```python
+from lighter.lighter_client import Client
+import os
+from lighter.modules.blockchain import OrderSide
+from lighter.constants import ORDERBOOK_WETH_USDC
+
+
+private_key = os.environ.get("SOURCE_PRIVATE_KEY")
+api_auth = os.environ.get("API_AUTH")
+
+
+client = Client(
+    private_key=private_key, api_auth=api_auth, web3_provider_url="ALCHEMY_URL"
+)
+
+
+async def main():
+    client.async_blockchain # to initalize the module
+    sizes = ["0.0001"]
+    prices = ["1000"]
+    sides = [OrderSide.SELL]
+
+    # Test async api
+    print(await client.async_api.get_blockchains())
+    print(await client.async_api.get_orderbook("WETH_USDC"))
+
+    print(
+        client.api.get_candles(
+            orderbook_symbol="WETH_USDC",
+            resolution=60,
+            timestamp_start=int(time.time()) - 60 * 60 * 60 * 24,
+            timestamp_end=int(time.time()),
+        )
+    )
+
+    tx_hash = await client.async_blockchain.create_limit_order_batch(
+        "WETH_USDC", sizes, prices, sides
+    )
+    # tx_hash = await client.async_blockchain.cancel_limit_order_batch(
+    #     "WETH_USDC", [24989]
+    # )
+    # tx_hash = await client.async_blockchain.update_limit_order_batch(
+    #     "WETH_USDC", [24991], ["0.0001"], ["100"], [OrderSide.BUY]
+    # )
+    # tx_hash = await client.async_blockchain.create_market_order(
+    #     "WETH_USDC", "0.0001", "100", OrderSide.SELL
+    # )
+
+    result = await client.async_blockchain.get_create_order_transaction_result(
+        tx_hash, "WETH_USDC"
+    )
+    # result = await client.async_blockchain.get_limit_order_canceled_transaction_result(
+    #     tx_hash, "WETH_USDC"
+    # )
+    # result = await client.async_blockchain.get_update_limit_order_transaction_result(
+    #     tx_hash, "WETH_USDC"
+    # )
+    print(result)
+
+    # close the aiohtpp session
+    await client.async_api.close_connection()
+
+
+if __name__ == "__main__":
+    import asyncio
+
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(main())
 ```
