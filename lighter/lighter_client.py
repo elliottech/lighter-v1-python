@@ -16,7 +16,6 @@ class Client(object):
         send_options: Optional[dict] = {},
         api_timeout: Optional[int] = None,
     ):
-
         self.host = host or HOST
 
         if self.host.endswith("/"):
@@ -76,7 +75,6 @@ class Client(object):
 
         if not self._blockchain:
             if self.web3 and self.private_key:
-
                 orderbooks: List[Orderbook] = self.api.get_orderbook_meta()[
                     "orderbookmetas"
                 ]
@@ -124,7 +122,6 @@ class Client(object):
 
         if not self._async_blockchain:
             if self.async_web3 and self.private_key:
-
                 orderbooks: List[Orderbook] = self.api.get_orderbook_meta()[
                     "orderbookmetas"
                 ]
