@@ -270,7 +270,6 @@ def test_create_limit_order_batch(mocker, mocked_client: Client):
         options=dict(
             to="0x123",
             data=expected_data,
-            gas=4000000,
         )
     )
 
@@ -312,7 +311,6 @@ def test_update_limit_order_batch(mocker, mocked_client: Client):
         options=dict(
             to="0x123",
             data=expected_data,
-            gas=4000000,
         )
     )
 
@@ -347,7 +345,6 @@ def test_cancel_limit_order_batch(mocker, mocked_client: Client):
         options=dict(
             to="0x123",
             data=expected_data,
-            gas=4000000,
         )
     )
 
@@ -385,7 +382,6 @@ def test_create_market_order(mocker, mocked_client: Client):
         options=dict(
             to="0x123",
             data=expected_data,
-            gas=4000000,
         )
     )
 

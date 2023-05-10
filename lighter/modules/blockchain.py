@@ -18,7 +18,6 @@ import asyncio
 import nest_asyncio
 
 from lighter.constants import DEFAULT_GAS_AMOUNT
-from lighter.constants import MAX_GAS_LIMIT
 from lighter.constants import DEFAULT_MAX_PRIORITY_FEE_PER_GAS
 from lighter.constants import DEFAULT_GAS_MULTIPLIER
 from lighter.constants import DEFAULT_MAX_FEE_PER_GAS
@@ -625,10 +624,6 @@ class AsyncBlockchain(BaseBlockchain):
         if "gas" not in options and method:
             try:
                 options["gas"] = int(method.estimate_gas(options) * gas_multiplier)
-                if options["gas"] > MAX_GAS_LIMIT:
-                    raise ValueError(
-                        "Gas limit exceeded, try with less number of operations in a batch transaction."
-                    )
             except Exception:
                 options["gas"] = DEFAULT_GAS_AMOUNT
 
@@ -857,6 +852,7 @@ class AsyncBlockchain(BaseBlockchain):
         human_readable_sizes: List[str],
         human_readable_prices: List[str],
         sides: List[OrderSide],
+        options: Dict[str, Any] = {},
     ) -> HexBytes:
         if not all(isinstance(x, str) for x in human_readable_sizes):
             raise ValueError("Invalid size, size should be string")
@@ -896,9 +892,7 @@ class AsyncBlockchain(BaseBlockchain):
         data = "0x01{:02x}{:02x}{}".format(orderbook["id"], len(sizes), orders_data)
 
         options = dict(
-            to=(await self.router_contract).address,
-            data=data,
-            gas=4000000,
+            to=(await self.router_contract).address, data=data, **(options or {})
         )
 
         return await self._send_eth_transaction(options=options)
@@ -910,6 +904,7 @@ class AsyncBlockchain(BaseBlockchain):
         human_readable_sizes: List[str],
         human_readable_prices: List[str],
         old_sides: List[OrderSide],
+        options: Dict[str, Any] = {},
     ) -> HexBytes:
         if not all(isinstance(x, str) for x in human_readable_sizes):
             raise ValueError("Invalid size, size should be string")
@@ -950,15 +945,13 @@ class AsyncBlockchain(BaseBlockchain):
         data = "0x02{:02x}{:02x}{}".format(orderbook["id"], len(sizes), orders_data)
 
         options = dict(
-            to=(await self.router_contract).address,
-            data=data,
-            gas=4000000,
+            to=(await self.router_contract).address, data=data, **(options or {})
         )
 
         return await self._send_eth_transaction(options=options)
 
     async def cancel_limit_order_batch(
-        self, orderbook_symbol: str, order_ids: List[int]
+        self, orderbook_symbol: str, order_ids: List[int], options: Dict[str, Any] = {}
     ) -> HexBytes:
         orderbook = self._get_orderbook(orderbook_symbol)
 
@@ -967,9 +960,7 @@ class AsyncBlockchain(BaseBlockchain):
         data = "0x03{:02x}{:02x}{}".format(orderbook["id"], len(order_ids), orders_data)
 
         options = dict(
-            to=(await self.router_contract).address,
-            data=data,
-            gas=4000000,
+            to=(await self.router_contract).address, data=data, **(options or {})
         )
 
         return await self._send_eth_transaction(options=options)
@@ -980,6 +971,7 @@ class AsyncBlockchain(BaseBlockchain):
         human_readable_size: str,
         human_readable_price: str,
         side: OrderSide,
+        options: Dict[str, Any] = {},
     ) -> HexBytes:
         self._tick_check(
             [human_readable_size], [human_readable_price], orderbook_symbol
@@ -1003,9 +995,7 @@ class AsyncBlockchain(BaseBlockchain):
         data = "0x04{:02x}{}".format(orderbook["id"], orders_data)
 
         options = dict(
-            to=(await self.router_contract).address,
-            data=data,
-            gas=4000000,
+            to=(await self.router_contract).address, data=data, **(options or {})
         )
 
         return await self._send_eth_transaction(options=options)
@@ -1270,20 +1260,23 @@ class Blockchain(BaseBlockchain):
             options["nonce"] = self._get_next_nonce(options["from"])
         if "value" not in options:
             options["value"] = 0
+
         gas_multiplier = options.pop("gasMultiplier", DEFAULT_GAS_MULTIPLIER)
-        options["maxFeePerGas"] = DEFAULT_MAX_FEE_PER_GAS
-        options["maxPriorityFeePerGas"] = DEFAULT_MAX_PRIORITY_FEE_PER_GAS
-        if "gas" not in options and method:
-            try:
-                options["gas"] = int(method.estimate_gas(options) * gas_multiplier)
-                if options["gas"] > MAX_GAS_LIMIT:
-                    raise ValueError(
-                        "Gas limit exceeded, try with less number of operations in a batch transaction."
-                    )
-            except Exception:
+        if "maxFeePerGas" not in options:
+            options["maxFeePerGas"] = DEFAULT_MAX_FEE_PER_GAS
+        if "maxPriorityFeePerGas" not in options:
+            options["maxPriorityFeePerGas"] = DEFAULT_MAX_PRIORITY_FEE_PER_GAS
+        if "gas" not in options:
+            if not method:
                 options["gas"] = DEFAULT_GAS_AMOUNT
+            else:
+                try:
+                    options["gas"] = int(method.estimate_gas(options) * gas_multiplier)
+                except Exception:
+                    options["gas"] = DEFAULT_GAS_AMOUNT
 
         signed = self._sign_tx(method, options)
+
         try:
             tx_hash = self.web3.eth.send_raw_transaction(signed.rawTransaction)
         except ValueError as error:
@@ -1508,6 +1501,7 @@ class Blockchain(BaseBlockchain):
         human_readable_sizes: List[str],
         human_readable_prices: List[str],
         sides: List[OrderSide],
+        options: Dict[str, Any] = {},
     ) -> HexBytes:
         if not all(isinstance(x, str) for x in human_readable_sizes):
             raise ValueError("Invalid size, size should be string")
@@ -1544,11 +1538,7 @@ class Blockchain(BaseBlockchain):
 
         data = "0x01{:02x}{:02x}{}".format(orderbook["id"], len(sizes), orders_data)
 
-        options = dict(
-            to=self.router_contract.address,
-            data=data,
-            gas=4000000,
-        )
+        options = dict(to=self.router_contract.address, data=data, **(options or {}))
 
         return self._send_eth_transaction(options=options)
 
@@ -1559,6 +1549,7 @@ class Blockchain(BaseBlockchain):
         human_readable_sizes: List[str],
         human_readable_prices: List[str],
         old_sides: List[OrderSide],
+        options: Dict[str, Any] = {},
     ) -> HexBytes:
         if not all(isinstance(x, str) for x in human_readable_sizes):
             raise ValueError("Invalid size, size should be string")
@@ -1598,16 +1589,12 @@ class Blockchain(BaseBlockchain):
 
         data = "0x02{:02x}{:02x}{}".format(orderbook["id"], len(sizes), orders_data)
 
-        options = dict(
-            to=self.router_contract.address,
-            data=data,
-            gas=4000000,
-        )
+        options = dict(to=self.router_contract.address, data=data, **(options or {}))
 
         return self._send_eth_transaction(options=options)
 
     def cancel_limit_order_batch(
-        self, orderbook_symbol: str, order_ids: List[int]
+        self, orderbook_symbol: str, order_ids: List[int], options: Dict[str, Any] = {}
     ) -> HexBytes:
         orderbook = self._get_orderbook(orderbook_symbol)
 
@@ -1618,7 +1605,7 @@ class Blockchain(BaseBlockchain):
         options = dict(
             to=self.router_contract.address,
             data=data,
-            gas=4000000,
+            **(options or {}),
         )
 
         return self._send_eth_transaction(options=options)
@@ -1629,6 +1616,7 @@ class Blockchain(BaseBlockchain):
         human_readable_size: str,
         human_readable_price: str,
         side: OrderSide,
+        options: Dict[str, Any] = {},
     ) -> HexBytes:
         self._tick_check(
             [human_readable_size], [human_readable_price], orderbook_symbol
@@ -1651,11 +1639,7 @@ class Blockchain(BaseBlockchain):
 
         data = "0x04{:02x}{}".format(orderbook["id"], orders_data)
 
-        options = dict(
-            to=self.router_contract.address,
-            data=data,
-            gas=4000000,
-        )
+        options = dict(to=self.router_contract.address, data=data, **(options or {}))
 
         return self._send_eth_transaction(options=options)
 
