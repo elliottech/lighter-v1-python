@@ -662,18 +662,6 @@ class AsyncBlockchain(BaseBlockchain):
                         error = inner_error
                     else:
                         break
-                elif "intrinsic gas too low" in str(error):
-                    try:
-                        retry_count += 1
-                        options["gas"] += options["gas"]
-                        signed = await self._sign_tx(method, options)
-                        tx_hash = await self.web3.eth.send_raw_transaction(
-                            signed.rawTransaction,
-                        )
-                    except ValueError as inner_error:
-                        error = inner_error
-                    else:
-                        break
                 else:
                     raise error
             else:
@@ -1315,18 +1303,6 @@ class Blockchain(BaseBlockchain):
                     try:
                         retry_count += 1
                         options["maxFeePerGas"] += options["maxFeePerGas"]
-                        signed = self._sign_tx(method, options)
-                        tx_hash = self.web3.eth.send_raw_transaction(
-                            signed.rawTransaction,
-                        )
-                    except ValueError as inner_error:
-                        error = inner_error
-                    else:
-                        break
-                elif "intrinsic gas too low" in str(error):
-                    try:
-                        retry_count += 1
-                        options["gas"] += options["gas"]
                         signed = self._sign_tx(method, options)
                         tx_hash = self.web3.eth.send_raw_transaction(
                             signed.rawTransaction,
