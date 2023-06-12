@@ -1028,7 +1028,7 @@ class AsyncBlockchain(BaseBlockchain):
         ]
 
     async def _get_gas_price(self) -> int:
-        return (await self._api._get_gas_price())["gas_price"]
+        return (await self._api.get_gas_price())["gas_price"]
 
     async def get_eth_balance(
         self,
@@ -1671,7 +1671,7 @@ class Blockchain(BaseBlockchain):
         ]
 
     def _get_gas_price(self) -> int:
-        return self._api._get_gas_price()["gas_price"]
+        return self._api.get_gas_price()["gas_price"]
 
     def get_eth_balance(
         self,

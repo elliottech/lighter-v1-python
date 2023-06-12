@@ -168,7 +168,7 @@ class AsyncApi(BaseApi):
             False,
         )
 
-    async def _get_gas_price(self) -> dict:
+    async def get_gas_price(self) -> dict:
         uri = "/gas_price"
         return await self._get(
             uri,
@@ -316,7 +316,7 @@ class Api(BaseApi):
             False,
         )
 
-    def _get_gas_price(self) -> dict:
+    def get_gas_price(self) -> dict:
         uri = "/gas_price"
         return self._get(
             uri,
