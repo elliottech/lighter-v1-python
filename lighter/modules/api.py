@@ -178,6 +178,12 @@ class AsyncApi(BaseApi):
             False,
         )
 
+    async def get_volume(self, timestamp: int) -> dict:
+        uri = "/volume"
+        return await self._get(
+            uri, {"blockchain_id": self.blockchain_id, "timestamp": timestamp}, False
+        )
+
 
 class Api(BaseApi):
     def __init__(
@@ -324,4 +330,10 @@ class Api(BaseApi):
                 "blockchain_id": self.blockchain_id,
             },
             False,
+        )
+
+    def get_volume(self, timestamp: int) -> dict:
+        uri = "/volume"
+        return self._get(
+            uri, {"blockchain_id": self.blockchain_id, "timestamp": timestamp}, False
         )
