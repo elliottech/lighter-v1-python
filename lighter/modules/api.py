@@ -139,7 +139,7 @@ class AsyncApi(BaseApi):
     async def get_trades(
         self,
         owner: str,
-        orderbook_symbol: Optional[str] = None,
+        orderbook_symbol: str,
         limit: Optional[int] = None,
         starting_before: Optional[int] = None,
     ) -> dict:
