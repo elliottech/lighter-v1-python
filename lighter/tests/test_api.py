@@ -2,6 +2,9 @@ import pytest
 import os
 
 from lighter.lighter_client import Client
+from lighter.constants import ORDERBOOK_WETH_USDC
+
+TEST_OWNER_ADDRESS = "0xE425f4Dfe8b2446b686b2C5a7c17679b7170996e"
 
 
 @pytest.fixture
@@ -14,50 +17,53 @@ def client() -> Client:
 def test_get_blockchains(client: Client):
     blockchains = client.api.get_blockchains()
 
-    assert "blockchains" in blockchains
-    assert len(blockchains["blockchains"]) > 0
+    assert type(blockchains) == list
+    assert len(blockchains) > 0
 
 
 def test_get_orderbook_meta(client: Client):
     orderbook_meta = client.api.get_orderbook_meta()
 
-    assert "orderbookmetas" in orderbook_meta
-    assert len(orderbook_meta["orderbookmetas"]) > 0
+    assert type(orderbook_meta) == list
+    assert len(orderbook_meta) > 0
 
 
 def test_get_orderbook(client: Client):
-    orderbook = client.api.get_orderbook("WETH_USDC")
+    orderbook = client.api.get_orderbook(ORDERBOOK_WETH_USDC)
 
-    assert "orderbooks" in orderbook
-    assert len(orderbook["orderbooks"]) > 0
+    assert type(orderbook) == dict
+    assert "symbol" in orderbook
+    assert "asks" in orderbook
+    assert "bids" in orderbook
 
 
 def test_get_candles(client: Client):
-    candles = client.api.get_candles("WETH_USDC", 1, 1686569768, 1686570368)
+    candles = client.api.get_candles(ORDERBOOK_WETH_USDC, 1687097397, 1687183683, "4h")
 
-    assert "candles" in candles
-    assert len(candles["candles"]) > 0
+    assert type(candles) == dict
+    assert "candlesticks" in candles
+    assert type(candles["candlesticks"]) == list
 
 
 def test_get_orders(client: Client):
     orders = client.api.get_orders(
-        "0xE425f4Dfe8b2446b686b2C5a7c17679b7170996e", limit=1
+        TEST_OWNER_ADDRESS,
+        orderbook_symbol=ORDERBOOK_WETH_USDC,
+        limit=1,
     )
 
-    assert "orders" in orders
-    assert type(orders["orders"]) == dict
-
-    assert "stats" in orders
-    assert type(orders["stats"]) == dict
+    assert type(orders) == list
+    assert len(orders) == 1
 
 
 def test_get_trades(client: Client):
     trades = client.api.get_trades(
-        "0xE425f4Dfe8b2446b686b2C5a7c17679b7170996e", limit=1
+        TEST_OWNER_ADDRESS,
+        orderbook_symbol=ORDERBOOK_WETH_USDC,
+        limit=1,
     )
 
-    assert "trades" in trades
-    assert type(trades["trades"]) == dict
+    assert type(trades) == list
 
 
 def test_get_gas_price(client: Client):
@@ -65,11 +71,3 @@ def test_get_gas_price(client: Client):
 
     assert "gas_price" in gas_price
     assert type(gas_price["gas_price"]) == int
-
-
-def test_get_volume(client: Client):
-    volume = client.api.get_volume(1686570368)
-
-    assert type(volume) == dict
-    assert "dailyVolume" in volume
-    assert "totalVolume" in volume

@@ -1,4 +1,4 @@
-HOST = "https://mensa.elliot.ai"
+HOST = "https://api.lighter.xyz"
 TEST_HOST = "https://lighter-test.elliot.ai"
 
 # ------------ Blockchain IDs -----------
@@ -13,11 +13,11 @@ TOKEN_LINK = "LINK"
 TOKEN_UNI = "UNI"
 
 # ------------ Orderbooks -------------------
-ORDERBOOK_WETH_USDC = "WETH_USDC"
-ORDERBOOK_WBTC_USDC = "WBTC_USDC"
-ORDERBOOK_WETH_WBTC = "WETH_WBTC"
-ORDERBOOK_UNI_USDC = "UNI_USDC"
-ORDERBOOK_LINK_USDC = "LINK_USDC"
+ORDERBOOK_WETH_USDC = "WETH-USDC"
+ORDERBOOK_WBTC_USDC = "WBTC-USDC"
+ORDERBOOK_WETH_WBTC = "WETH-WBTC"
+ORDERBOOK_UNI_USDC = "UNI-USDC"
+ORDERBOOK_LINK_USDC = "LINK-USDC"
 
 
 # ------------ Order Statuses -------------------
