@@ -18,16 +18,31 @@ ORDERBOOK_WBTC_USDC = "WBTC-USDC"
 ORDERBOOK_WETH_WBTC = "WETH-WBTC"
 ORDERBOOK_UNI_USDC = "UNI-USDC"
 ORDERBOOK_LINK_USDC = "LINK-USDC"
-
+ORDERBOOK_USDT_USDC = "USDT-USDC"
+ORDERBOOK_USDC_USDC = "USDC-USDC"
 
 # ------------ Order Statuses -------------------
-ORDER_STATUS_OPEN = "partially_filled"
+ORDER_STATUS_OPEN = "open"
 ORDER_STATUS_FILLED = "filled"
 ORDER_STATUS_CANCELLED = "canceled"
 
 # ------------ Order Types -------------------
 ORDER_TYPE_LIMIT = "limit"
 ORDER_TYPE_MARKET = "market"
+
+
+# ------------ Order Sides -------------------
+ORDER_SIDE_SELL = "sell"
+ORDER_SIDE_BUY = "buy"
+
+
+# ------------ Candlestick Resolutions -------------------
+CANDLESTICK_RESOLUTION_1MIN = "1min"
+CANDLESTICK_RESOLUTION_5MIN = "5min"
+CANDLESTICK_RESOLUTION_15MIN = "15min"
+CANDLESTICK_RESOLUTION_1H = "1h"
+CANDLESTICK_RESOLUTION_4H = "4h"
+CANDLESTICK_RESOLUTION_1D = "1d"
 
 
 # ------------ Ethereum Transactions ------------

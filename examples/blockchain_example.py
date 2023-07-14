@@ -38,7 +38,7 @@ result = client.blockchain.get_create_order_transaction_result(tx_hash, "WETH_US
 #         "size": "0.001",
 #         "filled_size": "0.0",
 #         "price": "1050",
-#         "status": OrderStatus.PARTIALLY_FILLED,
+#         "status": OrderStatus.OPEN,
 #         "type": OrderType.LIMIT,
 #         "side": OrderSide.BUY,
 #         "fills": [..], # list of fills

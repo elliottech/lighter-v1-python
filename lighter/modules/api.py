@@ -87,7 +87,10 @@ class AsyncApi(BaseApi):
         uri = "/order_book"
         return await self._get(
             uri,
-            {"blockchain_id": self.blockchain_id, "order_book_symbol": orderbook_symbol},
+            {
+                "blockchain_id": self.blockchain_id,
+                "order_book_symbol": orderbook_symbol,
+            },
         )
 
     async def get_candles(
@@ -236,7 +239,10 @@ class Api(BaseApi):
         uri = "/order_book"
         return self._get(
             uri,
-            {"blockchain_id": self.blockchain_id, "order_book_symbol": orderbook_symbol},
+            {
+                "blockchain_id": self.blockchain_id,
+                "order_book_symbol": orderbook_symbol,
+            },
         )
 
     def get_candles(
@@ -265,6 +271,7 @@ class Api(BaseApi):
         owner: str,
         orderbook_symbol: Optional[str] = None,
         status: Optional[str] = None,
+        side: Optional[str] = None,
         type: Optional[str] = None,
         limit: Optional[int] = None,
         start_timestamp: Optional[int] = None,
@@ -279,9 +286,10 @@ class Api(BaseApi):
                 "owner": owner,
                 "status": status,
                 "type": type,
+                "side": side,
                 "limit": limit,
-                "start_timestamp": start_timestamp,
-                "end_timestamp": end_timestamp,
+                "after": start_timestamp,
+                "before": end_timestamp,
             },
         )
 
@@ -316,7 +324,7 @@ class Api(BaseApi):
                 "prices": ",".join(prices),
                 "sides": ",".join(sides),
             },
-            False,
+            True,
         )
 
     def get_gas_price(self) -> dict:

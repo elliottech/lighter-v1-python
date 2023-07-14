@@ -65,7 +65,7 @@ async def subscribe_to_account(ws, auth):
     #             "price": 1212.78,
     #             "side": "buy",
     #             "size": 2.1329,
-    #             "status": "PARTIALLY_FILLED",
+    #             "status": "OPEN",
     #         },
     #         {
     #             "filled_amount": 0.0,
@@ -73,7 +73,7 @@ async def subscribe_to_account(ws, auth):
     #             "price": 1001.0,
     #             "side": "buy",
     #             "size": 0.001,
-    #             "status": "PARTIALLY_FILLED",
+    #             "status": "OPEN",
     #         },
     #     ],
     #     "trades": [
@@ -222,7 +222,7 @@ async def listen_for_updates(ws):
         #             "price": 1232.0,
         #             "side": "buy",
         #             "size": 0.0001,
-        #             "status": "PARTIALLY_FILLED",
+        #             "status": "OPEN",
         #         }
         #     ],
         #     "trades": [],
@@ -240,7 +240,7 @@ async def listen_for_updates(ws):
         #             "price": 1232.0,
         #             "side": "sell",
         #             "size": 4.7278,
-        #             "status": "PARTIALLY_FILLED",
+        #             "status": "OPEN",
         #         },
         #         {
         #             "filled_amount": 0.0001,

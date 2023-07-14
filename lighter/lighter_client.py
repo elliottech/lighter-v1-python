@@ -75,11 +75,10 @@ class Client(object):
 
         if not self._blockchain:
             if self.web3 and self.private_key:
-                orderbooks: List[Orderbook] = self.api.get_orderbook_meta()[
-                    "orderbookmetas"
-                ]
+                orderbooks: List[Orderbook] = self.api.get_orderbook_meta()
+                
 
-                chains = self.api.get_blockchains()["blockchains"]
+                chains = self.api.get_blockchains()
 
                 chain = next(
                     (
@@ -122,11 +121,10 @@ class Client(object):
 
         if not self._async_blockchain:
             if self.async_web3 and self.private_key:
-                orderbooks: List[Orderbook] = self.api.get_orderbook_meta()[
-                    "orderbookmetas"
-                ]
+                orderbooks: List[Orderbook] = self.api.get_orderbook_meta()
+                
 
-                chains = self.api.get_blockchains()["blockchains"]
+                chains = self.api.get_blockchains()
 
                 chain = next(
                     (
