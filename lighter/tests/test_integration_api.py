@@ -2,7 +2,7 @@ import pytest
 import os
 
 from lighter.lighter_client import Client
-from lighter.constants import ORDERBOOK_WETH_USDC
+from lighter.constants import ORDERBOOK_WETH_USDC, ORDER_STATUS_OPEN, ORDER_TYPE_LIMIT
 
 TEST_OWNER_ADDRESS = "0xE425f4Dfe8b2446b686b2C5a7c17679b7170996e"
 
@@ -56,6 +56,17 @@ def test_get_orders(client: Client):
     assert len(orders) == 1
 
 
+def test_get_orders2(client: Client):
+    orders = client.api.get_orders(
+        orderbook_symbol=ORDERBOOK_WETH_USDC,
+        owner=TEST_OWNER_ADDRESS,
+        status=ORDER_STATUS_OPEN,
+        type=ORDER_TYPE_LIMIT,
+    )
+
+    assert type(orders) == list
+
+
 def test_get_trades(client: Client):
     trades = client.api.get_trades(
         owner=TEST_OWNER_ADDRESS,
@@ -71,6 +82,7 @@ def test_get_gas_price(client: Client):
 
     assert "gas_price" in gas_price
     assert type(gas_price["gas_price"]) == int
+
 
 def test_get_hint_ids(client: Client):
     hint_ids = client.api.get_hint_ids(
