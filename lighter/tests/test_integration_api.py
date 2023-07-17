@@ -71,3 +71,13 @@ def test_get_gas_price(client: Client):
 
     assert "gas_price" in gas_price
     assert type(gas_price["gas_price"]) == int
+
+def test_get_hint_ids(client: Client):
+    hint_ids = client.api.get_hint_ids(
+        orderbook_symbol=ORDERBOOK_WETH_USDC,
+        prices=["1700", "1800"],
+        sides=["buy", "sell"],
+    )
+
+    assert "hint_ids" in hint_ids
+    assert len(hint_ids["hint_ids"]) == 2

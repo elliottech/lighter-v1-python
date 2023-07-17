@@ -158,7 +158,7 @@ class AsyncApi(BaseApi):
             },
         )
 
-    async def _get_hint_ids(
+    async def get_hint_ids(
         self, orderbook_symbol: str, prices: List[str], sides: List[str]
     ) -> dict:
         uri = "/hint_id"
@@ -170,7 +170,6 @@ class AsyncApi(BaseApi):
                 "prices": ",".join(prices),
                 "sides": ",".join(sides),
             },
-            False,
         )
 
     async def get_gas_price(self) -> dict:
@@ -312,7 +311,7 @@ class Api(BaseApi):
             },
         )
 
-    def _get_hint_ids(
+    def get_hint_ids(
         self, orderbook_symbol: str, prices: List[str], sides: List[str]
     ) -> dict:
         uri = "/hint_id"
@@ -324,7 +323,6 @@ class Api(BaseApi):
                 "prices": ",".join(prices),
                 "sides": ",".join(sides),
             },
-            True,
         )
 
     def get_gas_price(self) -> dict:
