@@ -14,10 +14,10 @@ The `Client` object has four main modules;
 
 - `Api`: allows interaction with the lighter api
 - `AsyncApi`: allows for async interaction with the lighter api
-- `Blockchain`: allows interaction with ligter contracts
-- `AsyncBlockchain`: allows async interaction with ligter contracts
+- `Blockchain`: allows interaction with lighter contracts
+- `AsyncBlockchain`: allows async interaction with lighter contracts
 
-`Client` can be created with private key or not depending on whether you are going to use the api or interract with the contracts. For more complete examples, see the [examples](./examples/) directory.
+`Client` can be created with private key or not depending on whether you are going to use the api or interact with the contracts. For more complete examples, see the [examples](./examples/) directory.
 
 ### API
 
@@ -50,7 +50,7 @@ Following parameters are required to use `Blockchain` module:
 - `private_key`: You need to provide your wallet private key to sign your transactions.
 - `web3_provider_url`: You need a node to interact with the contract. We suggest alchemy which provides 300M free compute units monthly, You can register and get your keys [here](https://www.alchemy.com/)
 
-Blockchain module enables you to do multiple operations in one transaction. The number of operations is limited to 4 millions gas. So the limits are rougly;
+Blockchain module enables you to do multiple operations in one transaction. The number of operations is limited to 4 million gas. So the limits are roughly;
 
 - 25 order creations in one transaction
 - 100 order cancellations in one transaction
@@ -118,7 +118,7 @@ client = Client(
 
 
 async def main():
-    client.async_blockchain # to initalize the module
+    client.async_blockchain # to initialize the module
     sizes = ["0.0001"]
     prices = ["1000"]
     sides = [OrderSide.SELL]
