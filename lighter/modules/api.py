@@ -80,32 +80,37 @@ class AsyncApi(BaseApi):
         return await self._get(uri)
 
     async def get_orderbook_meta(self) -> dict:
-        uri = "/orderbookmetas"
+        uri = "/order_book_metas"
         return await self._get(uri, {"blockchain_id": self.blockchain_id})
 
     async def get_orderbook(self, orderbook_symbol: str) -> dict:
-        uri = "/orderbook"
+        uri = "/order_book"
         return await self._get(
             uri,
-            {"blockchain_id": self.blockchain_id, "orderbook_symbol": orderbook_symbol},
+            {
+                "blockchain_id": self.blockchain_id,
+                "order_book_symbol": orderbook_symbol,
+            },
         )
 
     async def get_candles(
         self,
         orderbook_symbol: str,
-        resolution: int,
         timestamp_start: int,
         timestamp_end: int,
+        resolution: str,
+        count_back: Optional[int] = None,
     ) -> dict:
-        uri = "/candles"
+        uri = "/candlesticks"
         return await self._get(
             uri,
             {
                 "blockchain_id": self.blockchain_id,
-                "orderbook_symbol": orderbook_symbol,
-                "resolution_min": resolution,
+                "order_book_symbol": orderbook_symbol,
                 "start_timestamp": timestamp_start,
                 "end_timestamp": timestamp_end,
+                "resolution": resolution,
+                "count_back": count_back,
             },
         )
 
@@ -124,7 +129,7 @@ class AsyncApi(BaseApi):
             uri,
             {
                 "blockchain_id": self.blockchain_id,
-                "orderbook_symbol": orderbook_symbol,
+                "order_book_symbol": orderbook_symbol,
                 "owner": owner,
                 "status": status,
                 "type": type,
@@ -137,7 +142,7 @@ class AsyncApi(BaseApi):
     async def get_trades(
         self,
         owner: str,
-        orderbook_symbol: Optional[str] = None,
+        orderbook_symbol: str,
         limit: Optional[int] = None,
         starting_before: Optional[int] = None,
     ) -> dict:
@@ -146,14 +151,14 @@ class AsyncApi(BaseApi):
             uri,
             {
                 "blockchain_id": self.blockchain_id,
-                "orderbook_symbol": orderbook_symbol,
+                "order_book_symbol": orderbook_symbol,
                 "owner": owner,
                 "limit": limit,
                 "before": starting_before,
             },
         )
 
-    async def _get_hint_ids(
+    async def get_hint_ids(
         self, orderbook_symbol: str, prices: List[str], sides: List[str]
     ) -> dict:
         uri = "/hint_id"
@@ -161,11 +166,10 @@ class AsyncApi(BaseApi):
             uri,
             {
                 "blockchain_id": self.blockchain_id,
-                "orderbook_symbol": orderbook_symbol,
+                "order_book_symbol": orderbook_symbol,
                 "prices": ",".join(prices),
                 "sides": ",".join(sides),
             },
-            False,
         )
 
     async def get_gas_price(self) -> dict:
@@ -175,7 +179,6 @@ class AsyncApi(BaseApi):
             {
                 "blockchain_id": self.blockchain_id,
             },
-            False,
         )
 
 
@@ -228,32 +231,37 @@ class Api(BaseApi):
         return self._get(uri)
 
     def get_orderbook_meta(self) -> dict:
-        uri = "/orderbookmetas"
+        uri = "/order_book_metas"
         return self._get(uri, {"blockchain_id": self.blockchain_id})
 
     def get_orderbook(self, orderbook_symbol: str) -> dict:
-        uri = "/orderbook"
+        uri = "/order_book"
         return self._get(
             uri,
-            {"blockchain_id": self.blockchain_id, "orderbook_symbol": orderbook_symbol},
+            {
+                "blockchain_id": self.blockchain_id,
+                "order_book_symbol": orderbook_symbol,
+            },
         )
 
     def get_candles(
         self,
         orderbook_symbol: str,
-        resolution: int,
         timestamp_start: int,
         timestamp_end: int,
+        resolution: str,
+        count_back: Optional[int] = None,
     ) -> dict:
-        uri = "/candles"
+        uri = "/candlesticks"
         return self._get(
             uri,
             {
                 "blockchain_id": self.blockchain_id,
-                "orderbook_symbol": orderbook_symbol,
-                "resolution_min": resolution,
+                "order_book_symbol": orderbook_symbol,
                 "start_timestamp": timestamp_start,
                 "end_timestamp": timestamp_end,
+                "resolution": resolution,
+                "count_back": count_back,
             },
         )
 
@@ -262,6 +270,7 @@ class Api(BaseApi):
         owner: str,
         orderbook_symbol: Optional[str] = None,
         status: Optional[str] = None,
+        side: Optional[str] = None,
         type: Optional[str] = None,
         limit: Optional[int] = None,
         start_timestamp: Optional[int] = None,
@@ -272,20 +281,21 @@ class Api(BaseApi):
             uri,
             {
                 "blockchain_id": self.blockchain_id,
-                "orderbook_symbol": orderbook_symbol,
+                "order_book_symbol": orderbook_symbol,
                 "owner": owner,
                 "status": status,
                 "type": type,
+                "side": side,
                 "limit": limit,
-                "start_timestamp": start_timestamp,
-                "end_timestamp": end_timestamp,
+                "after": start_timestamp,
+                "before": end_timestamp,
             },
         )
 
     def get_trades(
         self,
         owner: str,
-        orderbook_symbol: Optional[str] = None,
+        orderbook_symbol: str,
         limit: Optional[int] = None,
         starting_before: Optional[int] = None,
     ) -> dict:
@@ -294,14 +304,14 @@ class Api(BaseApi):
             uri,
             {
                 "blockchain_id": self.blockchain_id,
-                "orderbook_symbol": orderbook_symbol,
+                "order_book_symbol": orderbook_symbol,
                 "owner": owner,
                 "limit": limit,
                 "before": starting_before,
             },
         )
 
-    def _get_hint_ids(
+    def get_hint_ids(
         self, orderbook_symbol: str, prices: List[str], sides: List[str]
     ) -> dict:
         uri = "/hint_id"
@@ -309,11 +319,10 @@ class Api(BaseApi):
             uri,
             {
                 "blockchain_id": self.blockchain_id,
-                "orderbook_symbol": orderbook_symbol,
+                "order_book_symbol": orderbook_symbol,
                 "prices": ",".join(prices),
                 "sides": ",".join(sides),
             },
-            False,
         )
 
     def get_gas_price(self) -> dict:
@@ -323,5 +332,4 @@ class Api(BaseApi):
             {
                 "blockchain_id": self.blockchain_id,
             },
-            False,
         )

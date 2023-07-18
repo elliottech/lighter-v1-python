@@ -26,20 +26,18 @@ def mocked_client(mocker) -> Client:
     mocker.patch("web3.main.Web3")
     mocker.patch(
         "lighter.modules.api.Api.get_orderbook_meta",
-        return_value={"orderbookmetas": []},
+        return_value=[],
     )
 
     mocker.patch(
         "lighter.modules.api.Api.get_blockchains",
-        return_value={
-            "blockchains": [
-                {
-                    "chain_id": "420",
-                    "router_address": "xxx",
-                    "factory_address": "xxx",
-                }
-            ]
-        },
+        return_value=[
+            {
+                "chain_id": "420",
+                "router_address": "xxx",
+                "factory_address": "xxx",
+            }
+        ],
     )
 
     mocker.patch(

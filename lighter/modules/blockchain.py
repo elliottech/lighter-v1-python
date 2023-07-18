@@ -54,7 +54,7 @@ Token = TypedDict(
 
 
 class OrderStatus(Enum):
-    PARTIALLY_FILLED = "PARTIALLY_FILLED"
+    OPEN = "OPEN"
     FILLED = "FILLED"
     CANCELED = "CANCELED"
 
@@ -774,7 +774,7 @@ class AsyncBlockchain(BaseBlockchain):
                     "price": created_event["price"],
                     "status": OrderStatus.FILLED
                     if fill_size == created_event["size"]
-                    else OrderStatus.PARTIALLY_FILLED,
+                    else OrderStatus.OPEN,
                     "type": created_event["type"],
                     "side": created_event["side"],
                     "fills": fills,
@@ -1423,7 +1423,7 @@ class Blockchain(BaseBlockchain):
                     "price": created_event["price"],
                     "status": OrderStatus.FILLED
                     if fill_size == created_event["size"]
-                    else OrderStatus.PARTIALLY_FILLED,
+                    else OrderStatus.OPEN,
                     "type": created_event["type"],
                     "side": created_event["side"],
                     "fills": fills,
