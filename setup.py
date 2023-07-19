@@ -18,7 +18,7 @@ REQUIREMENTS = [
 
 setup(
     name="lighter-v1-python",
-    version="1.0.5",
+    version="1.0.6",
     packages=find_packages(),
     package_data={
         "lighter": [
