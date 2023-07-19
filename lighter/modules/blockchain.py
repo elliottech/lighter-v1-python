@@ -1023,7 +1023,7 @@ class AsyncBlockchain(BaseBlockchain):
     ) -> List[int]:
         orderbook = self._get_orderbook(orderbook_symbol)
         sides_str = [side.value.lower() for side in sides]
-        return (await self._api._get_hint_ids(orderbook["symbol"], prices, sides_str))[
+        return (await self._api.get_hint_ids(orderbook["symbol"], prices, sides_str))[
             "hint_ids"
         ]
 
@@ -1666,7 +1666,7 @@ class Blockchain(BaseBlockchain):
     ) -> List[int]:
         orderbook = self._get_orderbook(orderbook_symbol)
         sides_str = [side.value.lower() for side in sides]
-        return self._api._get_hint_ids(orderbook["symbol"], prices, sides_str)[
+        return self._api.get_hint_ids(orderbook["symbol"], prices, sides_str)[
             "hint_ids"
         ]
 
