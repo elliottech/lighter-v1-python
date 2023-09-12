@@ -59,7 +59,7 @@ def test_get_orders(client: Client):
 def test_get_orders2(client: Client):
     orders = client.api.get_orders(
         orderbook_symbol=ORDERBOOK_WETH_USDC,
-        owner=TEST_OWNER_ADDRESS,
+        user_address=TEST_OWNER_ADDRESS,
         status=ORDER_STATUS_OPEN,
         type=ORDER_TYPE_LIMIT,
     )
