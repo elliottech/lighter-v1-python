@@ -282,7 +282,7 @@ class Api(BaseApi):
             {
                 "blockchain_id": self.blockchain_id,
                 "order_book_symbol": orderbook_symbol,
-                "owner": owner,
+                "user_address": owner,
                 "status": status,
                 "type": type,
                 "side": side,
